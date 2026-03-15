@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>דף עבודה 2 – לולאות מונה</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f0f2f7;
+    --surface: #ffffff;
+    --surface2: #f5f6fa;
+    --border: #dde1ef;
+    --accent: #5b52e8;
+    --accent2: #00a882;
+    --warn: #e08c00;
+    --success: #1aaa5f;
+    --danger: #d63031;
+    --text: #1c1e2e;
+    --muted: #7a7f9a;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Heebo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── APP SHELL ── */
+  .app-shell {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .topbar-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .topbar-title { font-size: 15px; font-weight: 700; color: var(--text); }
+  .topbar-sub { font-size: 12px; color: var(--muted); }
+
+  .score-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 13px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .score-badge .score-num { font-weight: 700; color: var(--accent2); font-size: 15px; }
+
+  /* ── LAYOUT ── */
+  .main-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .sidebar-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    padding-right: 8px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--muted);
+    transition: all 0.15s;
+    border: 1px solid transparent;
+    text-align: right;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active {
+    background: var(--surface2);
+    border-color: var(--accent);
+    color: var(--text);
+  }
+  .nav-item.solved { color: var(--success); }
+  .nav-item.solved .nav-num { background: var(--success); color: #fff; }
+  .nav-num {
+    width: 22px; height: 22px;
+    background: var(--border);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .nav-item.active .nav-num { background: var(--accent); color: #fff; }
+  .nav-title { flex: 1; line-height: 1.3; }
+  .nav-check { font-size: 12px; }
+
+  .sidebar-progress {
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .prog-bar-bg {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    margin: 8px 0 4px;
+    overflow: hidden;
+  }
+  .prog-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+  .prog-text { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
+
+  /* ── CONTENT AREA ── */
+  .content-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* ── QUESTION PANEL ── */
+  .question-panel {
+    display: none;
+    flex-direction: column;
+    gap: 1.5rem;
+    animation: fadeIn 0.25s ease;
+    max-width: 780px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .question-panel.active { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+  }
+  .q-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 1rem;
+  }
+  .q-badge {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 4px 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .q-text {
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--text);
+    white-space: pre-line;
+  }
+  .sub-list {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .sub-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--muted);
+    padding: 6px 10px;
+    background: var(--surface2);
+    border-radius: 8px;
+  }
+  .sub-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  /* ── CODE EDITOR ── */
+  .editor-wrap {
+    background: #f8f9fc;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .editor-header {
+    background: #eceef5;
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .editor-dots { display: flex; gap: 6px; }
+  .editor-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .editor-dot.red { background: #ff5f57; }
+  .editor-dot.yellow { background: #febc2e; }
+  .editor-dot.green { background: #28c840; }
+  .editor-lang {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Fira Code', monospace;
+    letter-spacing: 0.5px;
+  }
+  textarea.code-input {
+    width: 100%;
+    min-height: 180px;
+    background: #f8f9fc;
+    border: none;
+    outline: none;
+    resize: vertical;
+    font-family: 'Fira Code', monospace;
+    font-size: 13px;
+    color: #2d3561;
+    padding: 16px;
+    direction: ltr;
+    text-align: left;
+    line-height: 1.7;
+    tab-size: 2;
+  }
+  textarea.code-input::placeholder { color: #b0b5cc; }
+
+  /* ── ACTIONS BAR ── */
+  .actions-bar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .btn {
+    font-family: 'Heebo', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { background: #7b74ff; }
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+  .hints-indicator {
+    margin-right: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .hint-pip {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: background 0.2s;
+  }
+  .hint-pip.used { background: var(--warn); }
+  .hint-pip.all-used { background: var(--muted); }
+  .hints-label { font-size: 12px; color: var(--muted); }
+
+  /* ── FEEDBACK ── */
+  .feedback-card {
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    font-size: 14px;
+    line-height: 1.7;
+    display: none;
+    animation: slideIn 0.2s ease;
+    white-space: pre-line;
+  }
+  .feedback-card.show { display: block; }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .feedback-card.hint-fb {
+    background: #fff8e6;
+    border: 1px solid #f0c050;
+    color: #7a5800;
+  }
+  .feedback-card.success-fb {
+    background: #eafaf2;
+    border: 1px solid #80dba8;
+    color: #0f6e3a;
+  }
+  .feedback-card.error-fb {
+    background: #fff0f0;
+    border: 1px solid #f5aaaa;
+    color: #8b1a1a;
+  }
+  .feedback-card.loading-fb {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── SOLVED OVERLAY ── */
+  .solved-banner {
+    display: none;
+    background: #eafaf2;
+    border: 1px solid #80dba8;
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    align-items: center;
+    gap: 14px;
+    animation: fadeIn 0.3s ease;
+  }
+  .solved-banner.show { display: flex; }
+  .solved-icon {
+    width: 44px; height: 44px;
+    background: #c5f0d8;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .solved-text { flex: 1; }
+  .solved-text h3 { font-size: 15px; font-weight: 700; color: #0f6e3a; }
+  .solved-text p { font-size: 13px; color: var(--muted); margin-top: 3px; }
+  .btn-next {
+    background: var(--success);
+    color: #fff;
+    font-family: 'Heebo', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 18px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-next:hover { opacity: 0.85; }
+
+  /* ── COMPLETION SCREEN ── */
+  #screen-complete {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 3rem;
+    gap: 1.5rem;
+    flex: 1;
+  }
+  #screen-complete.show { display: flex; }
+  .complete-circle {
+    width: 100px; height: 100px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 44px;
+    animation: pop 0.4s cubic-bezier(.36,.07,.19,.97);
+  }
+  @keyframes pop {
+    0%   { transform: scale(0); }
+    70%  { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+  #screen-complete h2 { font-size: 28px; font-weight: 900; }
+  #screen-complete p { font-size: 15px; color: var(--muted); max-width: 360px; }
+  .btn-restart {
+    background: var(--accent);
+    color: #fff;
+    font-family: 'Heebo', sans-serif;
+    font-size: 14px; font-weight: 700;
+    padding: 12px 28px; border-radius: 10px; border: none; cursor: pointer;
+  }
+  .btn-restart:hover { background: #7b74ff; }
+
+  /* ── SIMULATION PANEL ── */
+  .sim-panel {
+    display: none;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    animation: slideIn 0.2s ease;
+  }
+  .sim-panel.show { display: flex; }
+  .sim-header {
+    background: #1e2235;
+    color: #c8d3f0;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    font-family: 'Fira Code', monospace;
+    letter-spacing: 0.5px;
+  }
+  .sim-header-left { display: flex; align-items: center; gap: 8px; }
+  .sim-dot-green { width: 8px; height: 8px; border-radius: 50%; background: #28c840; }
+  .sim-title { color: #8892b0; }
+  .sim-close {
+    background: none; border: none; color: #8892b0;
+    cursor: pointer; font-size: 16px; line-height: 1;
+    padding: 0 2px;
+  }
+  .sim-close:hover { color: #cdd6f4; }
+  .sim-body {
+    background: #1a1d2e;
+    padding: 14px 16px;
+    min-height: 140px;
+    max-height: 340px;
+    overflow-y: auto;
+    font-family: 'Fira Code', monospace;
+    font-size: 13px;
+    line-height: 1.8;
+  }
+  .sim-line { display: flex; gap: 8px; align-items: flex-start; }
+  .sim-line .prefix { color: #4a5270; user-select: none; flex-shrink: 0; margin-top: 1px; }
+  .sim-line.output .text { color: #a6e3a1; }
+  .sim-line.input-req .text { color: #89dceb; }
+  .sim-line.input-given .text { color: #f5c2e7; }
+  .sim-line.step .text { color: #cba6f7; font-size: 11px; }
+  .sim-line.error .text { color: #f38ba8; }
+  .sim-line.info .text { color: #fab387; font-size: 11px; }
+  .sim-input-row {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #22263a;
+    border-top: 1px solid #2e3350;
+  }
+  .sim-input-row.show { display: flex; }
+  .sim-prompt-label {
+    font-family: 'Fira Code', monospace;
+    font-size: 13px;
+    color: #89dceb;
+    white-space: nowrap;
+  }
+  .sim-input-field {
+    flex: 1;
+    font-family: 'Fira Code', monospace;
+    font-size: 13px;
+    background: #1a1d2e;
+    border: 1px solid #3d4270;
+    border-radius: 6px;
+    color: #f5c2e7;
+    padding: 6px 10px;
+    outline: none;
+    direction: ltr;
+  }
+  .sim-input-field:focus { border-color: var(--accent); }
+  .sim-submit {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 14px;
+    cursor: pointer;
+  }
+  .sim-submit:hover { opacity: 0.85; }
+  .sim-footer {
+    background: #22263a;
+    border-top: 1px solid #2e3350;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .sim-status {
+    font-size: 12px;
+    color: #8892b0;
+    font-family: 'Fira Code', monospace;
+    flex: 1;
+  }
+  .sim-status.running { color: #fab387; }
+  .sim-status.done { color: #a6e3a1; }
+  .btn-sim {
+    background: #22263a;
+    color: #a6d9f7;
+    border: 1px solid #3d4270;
+    font-family: 'Heebo', sans-serif;
+    font-size: 13px; font-weight: 500;
+    padding: 9px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    transition: all 0.15s;
+  }
+  .btn-sim:hover { background: #2e3350; border-color: #6c7aad; }
+  .btn-sim:active { transform: scale(0.97); }
+  .btn-sim:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+  .btn-explain {
+    background: #f0faf5;
+    color: #0f6e3a;
+    border: 1px solid #80dba8;
+    font-family: 'Heebo', sans-serif;
+    font-size: 14px; font-weight: 500;
+    padding: 10px 20px; border-radius: 10px; cursor: pointer;
+    display: flex; align-items: center; gap: 7px;
+    transition: all 0.15s;
+  }
+  .btn-explain:hover { background: #d8f5e8; }
+  .btn-explain:active { transform: scale(0.97); }
+  .btn-explain:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+  .feedback-card.reveal-fb {
+    background: #f0f4ff;
+    border: 1px solid #a0aaee;
+    color: #2a3070;
+  }
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 700;
+    background: #eafaf2; color: #0f6e3a;
+    border-radius: 6px; padding: 3px 9px;
+    margin-right: 4px;
+  }
+  .given-code-wrap {
+    background: #1a1d2e;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .given-code-header {
+    background: #22263a;
+    border-bottom: 1px solid #2e3350;
+    padding: 9px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .given-code-label {
+    font-size: 11px; color: #8892b0;
+    font-family: 'Fira Code', monospace; letter-spacing: 0.5px;
+  }
+  .given-badge {
+    font-size: 10px; font-weight: 700;
+    background: #2e3a5a; color: #89b4fa;
+    border-radius: 5px; padding: 2px 8px;
+  }
+  pre.given-code {
+    font-family: 'Fira Code', monospace;
+    font-size: 13px; line-height: 1.75;
+    color: #cdd6f4;
+    background: #1a1d2e;
+    padding: 20px 20px;
+    overflow-x: auto;
+    margin: 0;
+    white-space: pre;
+    direction: ltr; text-align: left;
+    min-height: 80px;
+  }
+  .inputs-row {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+  }
+  .inputs-label { font-size: 13px; color: var(--muted); font-weight: 500; white-space: nowrap; }
+  .input-chip {
+    font-family: 'Fira Code', monospace;
+    font-size: 13px; font-weight: 500;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 10px;
+    color: #89dceb;
+  }
+  .trace-section { display: flex; flex-direction: column; gap: 10px; }
+  .trace-section-title {
+    font-size: 13px; font-weight: 700; color: var(--text);
+    display: flex; align-items: center; gap: 7px;
+  }
+  .trace-section-title span { color: var(--muted); font-weight: 400; font-size: 12px; }
+  .trace-table-wrap { overflow-x: auto; }
+  table.trace-table {
+    width: 100%; border-collapse: collapse;
+    font-size: 13px; font-family: 'Fira Code', monospace;
+    direction: rtl;
+  }
+  table.trace-table th {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    font-size: 12px; font-weight: 700;
+    color: var(--accent);
+    text-align: center; white-space: nowrap;
+  }
+  table.trace-table td {
+    border: 1px solid var(--border);
+    padding: 0;
+    text-align: center;
+    background: var(--surface);
+  }
+  table.trace-table td input.trace-cell {
+    width: 100%; min-width: 70px;
+    background: transparent; border: none; outline: none;
+    font-family: 'Fira Code', monospace;
+    font-size: 13px; color: var(--text);
+    padding: 8px 10px; text-align: center;
+  }
+  table.trace-table td input.trace-cell:focus {
+    background: #eef2ff;
+    color: #3b3f72;
+  }
+  table.trace-table td input.trace-cell.correct { background: #eafaf2; color: #0f6e3a; }
+  table.trace-table td input.trace-cell.wrong   { background: #fff0f0; color: #8b1a1a; }
+  .explain-area textarea {
+    width: 100%; min-height: 80px;
+    font-size: 14px; font-family: 'Heebo', sans-serif;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--surface2); color: var(--text);
+    padding: 12px 14px; resize: vertical; line-height: 1.6; direction: rtl;
+  }
+  .explain-area textarea:focus { outline: none; border-color: var(--accent); }
+  .explain-area label { font-size: 13px; font-weight: 700; color: var(--text); display: block; margin-bottom: 7px; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── MOBILE ── */
+  @media (max-width: 640px) {
+    .sidebar { display: none; }
+    .content-area { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-icon">🔁</div>
+      <div>
+        <div class="topbar-title">דף עבודה 2</div>
+        <div class="topbar-sub">לולאת מונה · C# · כיתה יא</div>
+      </div>
+    </div>
+    <div class="score-badge">
+      <span>✅</span>
+      <span class="score-num" id="score-num">0</span>
+      <span style="color:var(--muted);font-size:12px">/ 6 שאלות</span>
+    </div>
+  </div>
+
+  <!-- MAIN LAYOUT -->
+  <div class="main-layout">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-label">שאלות</div>
+      <div id="nav-items"></div>
+      <div class="sidebar-progress">
+        <div class="prog-text">
+          <span>התקדמות</span>
+          <span id="prog-pct">0%</span>
+        </div>
+        <div class="prog-bar-bg">
+          <div class="prog-bar-fill" id="prog-fill" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content-area" id="content-area">
+
+      <!-- QUESTIONS (rendered by JS) -->
+      <div id="questions-container"></div>
+
+      <!-- COMPLETE SCREEN -->
+      <div id="screen-complete">
+        <div class="complete-circle">🎉</div>
+        <h2>כל הכבוד!</h2>
+        <p>פתרת את כל 6 השאלות בהצלחה. אתה שולט בלולאות מונה עם מונה וצובר!</p>
+        <button class="btn-restart" onclick="restartAll()">התחל מחדש</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {
+    id: 1,
+    title: "🎮 Ranked Gaming",
+    text: "אתם מפתחים אפליקציית סטטיסטיקה למשחק Battle Royale.\nהאפליקציה קולטת את מספר הקילים שעשה שחקן בכל אחד מ-10 המשחקים האחרונים שלו.",
+    sub: ["ממוצע הקילים למשחק", "בכמה משחקים עשה יותר מ-5 קילים (הדפסת 'משחק מטורף!')"],
+    concept: "לולאה 10 חזרות, צובר לממוצע, מונה למשחקים עם קילים גבוהים"
+  },
+  {
+    id: 2,
+    title: "📱 TikTok Viral",
+    text: "מנהלת תוכן ב-TikTok רוצה לנתח 7 סרטונים שהעלתה החודש.\nכתוב תוכנית שקולטת את מספר הצפיות של כל סרטון ומדפיסה:",
+    sub: ["סך כל הצפיות החודשיות", "כמה סרטונים עברו את מיליון הצפיות (ויראל!)"],
+    concept: "לולאה 7 חזרות, צובר לסה\"כ צפיות, מונה לסרטונים ויראליים"
+  },
+  {
+    id: 3,
+    title: "🎧 Spotify Flex",
+    type: "trace",
+    text: "הקוד הבא נכתב על ידי מפתח שבנה כלי לניתוח מחירי אוזניות.\nבצע טבלת מעקב לפי הקלט הנתון, והסבר בקצרה מה התוכנית עושה.",
+    code: `int sum = 0, count = 0;
+for (int i = 1; i <= 6; i++)
+{
+    int price = int.Parse(Console.ReadLine());
+    if (price > 250)
+    {
+        sum += price;
+        count++;
+    }
+}
+Console.WriteLine("סכום: " + sum);
+Console.WriteLine("כמות: " + count);`,
+    inputs: [180, 320, 95, 410, 260, 150],
+    traceHeaders: ["i", "price", "תנאי (price>250)", "sum", "count"],
+    concept: "לולאה 6 חזרות, צובר ומונה מותנים למחיר גבוה"
+  },
+  {
+    id: 4,
+    title: "🏀 NBA Draft Analyzer",
+    text: "סקאוט כדורסל בודק 20 שחקנים צעירים לדראפט.\nשחקן נחשב 'פרוספקט עילאי' אם ממוצע הנקודות שלו מעל 18 לגיימ.\nכתוב תוכנית שקולטת את ממוצע הנקודות של כל שחקן ומדפיסה את ממוצע הנקודות של הפרוספקטים העילאיים בלבד.",
+    sub: [],
+    concept: "לולאה 20 חזרות, מונה+צובר רק לפרוספקטים עילאיים, ממוצע מותנה"
+  },
+  {
+    id: 5,
+    title: "📸 Influencer Analytics",
+    text: "את/ה מנהל/ת את הדאטה של מיקרו-אינפלואנסרית באינסטגרם.\nבחודש האחרון היא פרסמה 10 פוסטים, וכל פוסט קיבל מספר תגובות.\nכתוב תוכנית שקולטת את מספר התגובות לכל פוסט ומדפיסה:\nכמה תגובות בסה\"כ קיבלו הפוסטים שעוררו באמת שיחה – כלומר יותר מ-30 תגובות.",
+    sub: [],
+    concept: "לולאה 10 חזרות, צובר מותנה לפוסטים עם מעל 30 תגובות"
+  },
+  {
+    id: 6,
+    title: "⚽ Fantasy Football",
+    type: "trace",
+    text: "חברך כתב את הקוד הבא לניהול קבוצת הפנטזי שלו.\nבצע טבלת מעקב לפי הקלט הנתון, והסבר מה הקוד מחשב ומדפיס.",
+    code: `int bonusPlayers = 0;
+int totalPoints = 0;
+for (int i = 1; i <= 5; i++)
+{
+    int pts = int.Parse(Console.ReadLine());
+    totalPoints += pts;
+    if (pts > 20)
+        bonusPlayers++;
+}
+double avg = (double)totalPoints / 5;
+Console.WriteLine("שחקני בונוס: " + bonusPlayers);
+Console.WriteLine("ממוצע: " + avg);`,
+    inputs: [15, 24, 9, 31, 22],
+    traceHeaders: ["i", "pts", "totalPoints", "תנאי (pts>20)", "bonusPlayers"],
+    concept: "לולאה 5 חזרות, מונה מותנה + צובר לממוצע"
+  }
+];
+
+const state = {};
+questions.forEach(q => {
+  state[q.id] = { hintsUsed: 0, solved: false };
+  if (q.type === 'trace') { state[q.id].tableSolved = false; state[q.id].explainSolved = false; }
+});
+
+let activeQ = 1;
+
+/* ── BUILD UI ── */
+function buildNav() {
+  const nav = document.getElementById('nav-items');
+  questions.forEach(q => {
+    const el = document.createElement('div');
+    el.className = 'nav-item' + (q.id === 1 ? ' active' : '');
+    el.id = 'nav-' + q.id;
+    el.innerHTML = `<div class="nav-num">${q.id}</div><div class="nav-title">${q.title}</div><div class="nav-check" id="nav-check-${q.id}"></div>`;
+    el.onclick = () => switchTo(q.id);
+    nav.appendChild(el);
+  });
+}
+
+function buildQuestions() {
+  const container = document.getElementById('questions-container');
+  questions.forEach(q => {
+    const panel = document.createElement('div');
+    panel.className = 'question-panel' + (q.id === 1 ? ' active' : '');
+    panel.id = 'panel-' + q.id;
+
+    if (q.type === 'trace') {
+      panel.innerHTML = buildTracePanel(q);
+    } else {
+      const subHtml = q.sub.length
+        ? `<div class="sub-list">${q.sub.map(s => `<div class="sub-item"><div class="sub-dot"></div>${s}</div>`).join('')}</div>`
+        : '';
+      panel.innerHTML = buildCodePanel(q, subHtml);
+    }
+    container.appendChild(panel);
+  });
+}
+
+function buildCodePanel(q, subHtml) {
+  return `
+    <div class="q-card">
+      <div class="q-card-header"><div class="q-badge">שאלה ${q.id}</div></div>
+      <div class="q-text">${q.text}</div>
+      ${subHtml}
+    </div>
+    <div class="editor-wrap">
+      <div class="editor-header">
+        <div class="editor-dots">
+          <div class="editor-dot red"></div>
+          <div class="editor-dot yellow"></div>
+          <div class="editor-dot green"></div>
+        </div>
+        <div class="editor-lang">C#</div>
+      </div>
+      <textarea class="code-input" id="code-${q.id}" placeholder="כתוב כאן את קוד הפתרון שלך...&#10;&#10;int sum = 0, count = 0;&#10;for (int i = 1; i &lt;= ...; i++)&#10;{&#10;    int x = int.Parse(Console.ReadLine());&#10;    ...&#10;}&#10;Console.WriteLine(...);"></textarea>
+    </div>
+    <div class="actions-bar">
+      <button class="btn btn-primary" id="check-btn-${q.id}" onclick="checkAnswer(${q.id})">✔ בדוק פתרון</button>
+      <button class="btn-sim" id="sim-btn-${q.id}" onclick="runSimulation(${q.id})">▶ הרץ סימולציה</button>
+      <button class="btn btn-secondary" id="hint-btn-${q.id}" onclick="getHint(${q.id})">💡 רמז</button>
+      <div class="hints-indicator">
+        <span class="hints-label">רמזים:</span>
+        <div class="hint-pip" id="pip-${q.id}-0"></div>
+        <div class="hint-pip" id="pip-${q.id}-1"></div>
+        <div class="hint-pip" id="pip-${q.id}-2"></div>
+      </div>
+    </div>
+    <div class="sim-panel" id="sim-panel-${q.id}">
+      <div class="sim-header">
+        <div class="sim-header-left"><div class="sim-dot-green"></div><span class="sim-title">סימולציה – שאלה ${q.id}</span></div>
+        <button class="sim-close" onclick="closeSim(${q.id})">✕</button>
+      </div>
+      <div class="sim-body" id="sim-body-${q.id}"></div>
+      <div class="sim-input-row" id="sim-input-row-${q.id}">
+        <span class="sim-prompt-label">&gt; הכנס ערך:</span>
+        <input class="sim-input-field" id="sim-input-${q.id}" type="number" placeholder="הקלד מספר..." onkeydown="if(event.key==='Enter')submitInput(${q.id})">
+        <button class="sim-submit" onclick="submitInput(${q.id})">↵ אישור</button>
+      </div>
+      <div class="sim-footer"><span class="sim-status" id="sim-status-${q.id}">ממתין להרצה...</span></div>
+    </div>
+    <div class="feedback-card" id="fb-${q.id}"></div>
+    <div class="solved-banner" id="solved-banner-${q.id}">
+      <div class="solved-icon">🏆</div>
+      <div class="solved-text"><h3>פתרת נכון!</h3><p>השאלה הושלמה בהצלחה</p></div>
+      ${q.id < 6 ? `<button class="btn-next" onclick="switchTo(${q.id + 1})">השאלה הבאה ←</button>` : `<button class="btn-next" onclick="showComplete()">סיים! 🎉</button>`}
+    </div>`;
+}
+
+function buildTracePanel(q) {
+  const chipsHtml = q.inputs.map(v => `<span class="input-chip">${v}</span>`).join('');
+  const headersHtml = q.traceHeaders.map(h => `<th>${h}</th>`).join('') + '<th>הערות</th>';
+  const rowsHtml = q.inputs.map((_, idx) =>
+    `<tr>${q.traceHeaders.map((_, ci) => `<td><input class="trace-cell" id="tc-${q.id}-${idx}-${ci}" type="text" autocomplete="off"></td>`).join('')}<td><input class="trace-cell" id="tc-${q.id}-${idx}-note" type="text" autocomplete="off"></td></tr>`
+  ).join('');
+  const codeEscaped = q.code
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+  return `
+    <div class="q-card">
+      <div class="q-card-header">
+        <div class="q-badge">שאלה ${q.id}</div>
+        <div style="font-size:12px;background:#eef2ff;color:#5b52e8;border-radius:6px;padding:3px 10px;font-weight:700;">📋 טבלת מעקב</div>
+      </div>
+      <div class="q-text">${q.text}</div>
+    </div>
+
+    <div class="given-code-wrap">
+      <div class="given-code-header">
+        <span class="given-code-label">קוד נתון – C#</span>
+        <span class="given-badge">READ ONLY</span>
+      </div>
+      <pre class="given-code">${codeEscaped}</pre>
+    </div>
+
+    <div class="inputs-row">
+      <span class="inputs-label">קלטים לדוגמה (לפי סדר):</span>
+      ${chipsHtml}
+    </div>
+
+    <div class="trace-section">
+      <div class="trace-section-title">טבלת מעקב <span>מלא את הערכים בכל איטרציה</span></div>
+      <div class="trace-table-wrap">
+        <table class="trace-table">
+          <thead><tr>${headersHtml}</tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="explain-area">
+      <label>🧠 הסבר בקצרה – מה התוכנית עושה? מה מודפס בסוף?</label>
+      <textarea id="explain-${q.id}" placeholder="לדוגמה: התוכנית עוברת על... ומחשבת... בסוף מדפיסה..."></textarea>
+    </div>
+
+    <div class="actions-bar">
+      <button class="btn btn-primary" id="check-btn-${q.id}" onclick="checkTableOnly(${q.id})">📊 בדוק טבלת מעקב</button>
+      <button class="btn btn-explain" id="explain-btn-${q.id}" onclick="checkExplanation(${q.id})">🧠 בדוק הסבר</button>
+      <button class="btn btn-secondary" id="hint-btn-${q.id}" onclick="getHint(${q.id})">💡 רמז</button>
+      <div class="hints-indicator">
+        <span class="hints-label">רמזים:</span>
+        <div class="hint-pip" id="pip-${q.id}-0"></div>
+        <div class="hint-pip" id="pip-${q.id}-1"></div>
+        <div class="hint-pip" id="pip-${q.id}-2"></div>
+      </div>
+    </div>
+
+    <div class="feedback-card" id="fb-table-${q.id}"></div>
+    <div class="feedback-card" id="fb-explain-${q.id}"></div>
+    <div class="feedback-card" id="fb-${q.id}" style="display:none"></div>
+
+    <div class="solved-banner" id="solved-banner-${q.id}">
+      <div class="solved-icon">🏆</div>
+      <div class="solved-text"><h3>מעקב מעולה!</h3><p>הטבלה וההסבר נכונים</p></div>
+      ${q.id < 6 ? `<button class="btn-next" onclick="switchTo(${q.id + 1})">השאלה הבאה ←</button>` : `<button class="btn-next" onclick="showComplete()">סיים! 🎉</button>`}
+    </div>`;
+}
+
+function switchTo(id) {
+  document.querySelectorAll('.question-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + id)?.classList.add('active');
+  document.getElementById('nav-' + id)?.classList.add('active');
+  activeQ = id;
+  document.getElementById('content-area').scrollTop = 0;
+}
+
+function showComplete() {
+  document.querySelectorAll('.question-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('screen-complete').classList.add('show');
+}
+
+function restartAll() {
+  questions.forEach(q => {
+    state[q.id] = { hintsUsed: 0, solved: false };
+    if (q.type === 'trace') { state[q.id].tableSolved = false; state[q.id].explainSolved = false; }
+  });
+  document.querySelectorAll('.code-input').forEach(t => t.value = '');
+  document.querySelectorAll('.trace-cell').forEach(t => { t.value = ''; t.className = 'trace-cell'; });
+  document.querySelectorAll('[id^="explain-"]').forEach(t => { if (t.tagName === 'TEXTAREA') t.value = ''; });
+  document.querySelectorAll('.feedback-card').forEach(f => { f.className = 'feedback-card'; f.textContent = ''; });
+  document.querySelectorAll('.solved-banner').forEach(b => b.classList.remove('show'));
+  document.querySelectorAll('[id^="pip-"]').forEach(p => { p.className = 'hint-pip'; });
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('solved'));
+  document.querySelectorAll('.nav-check').forEach(c => c.textContent = '');
+  document.querySelectorAll('[id^="check-btn-"]').forEach(b => { b.disabled = false; b.innerHTML = b.innerHTML.includes('טבלה') ? '📊 בדוק טבלת מעקב' : b.innerHTML; });
+  document.querySelectorAll('[id^="explain-btn-"]').forEach(b => { b.disabled = false; b.textContent = '🧠 בדוק הסבר'; });
+  document.querySelectorAll('[id^="hint-btn-"]').forEach(b => { b.disabled = false; b.textContent = '💡 רמז'; });
+  document.getElementById('screen-complete').classList.remove('show');
+  updateProgress();
+  switchTo(1);
+}
+
+function updateProgress() {
+  const n = Object.values(state).filter(s => s.solved).length;
+  const pct = Math.round(n / 6 * 100);
+  document.getElementById('score-num').textContent = n;
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent = pct + '%';
+}
+
+function updatePips(qId) {
+  const s = state[qId];
+  for (let i = 0; i < 3; i++) {
+    const pip = document.getElementById(`pip-${qId}-${i}`);
+    if (!pip) continue;
+    pip.className = 'hint-pip' + (s.solved ? ' all-used' : (i < s.hintsUsed ? ' used' : ''));
+  }
+}
+
+function showFeedback(qId, type, html) {
+  const fb = document.getElementById('fb-' + qId);
+  fb.innerHTML = html;
+  fb.className = 'feedback-card show ' + type;
+}
+
+/* ── CHECK ANSWER ── */
+async function checkAnswer(qId) {
+  const s = state[qId];
+  if (s.solved) return;
+  const answer = document.getElementById('code-' + qId).value.trim();
+  if (!answer) {
+    showFeedback(qId, 'error-fb', '✏️ כתוב קוד לפני שתבדוק!');
+    return;
+  }
+  const q = questions.find(x => x.id === qId);
+  const checkBtn = document.getElementById('check-btn-' + qId);
+  checkBtn.disabled = true;
+  showFeedback(qId, 'loading-fb', '<div class="spinner"></div> בודק את הפתרון...');
+
+  const prompt = `אתה מורה לתכנות C# לתיכון בישראל.
+בדוק את פתרון התלמיד לשאלה הבאה:
+
+שאלה: ${q.text}
+${q.sub.length ? 'חלקים: ' + q.sub.join(' | ') : ''}
+נושא: ${q.concept}
+
+פתרון התלמיד (C#):
+${answer}
+
+כללי הבדיקה:
+- בדוק לוגיקה, לא תחביר מושלם
+- אם נכון: ענה "✅ " ואז שבח קצר בשורה אחת
+- אם חסרים חלקים: ענה "⚠️ כמעט! " ואז ציין בדיוק מה חסר (עד 2 שורות), ללא קוד
+- אם שגוי: ענה "❌ " ואז הסבר את הבעיה המרכזית (שורה אחת), ללא קוד
+ענה בעברית בלבד.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await res.json();
+    const text = data.content?.find(b => b.type === 'text')?.text || '';
+
+    if (text.includes('✅')) {
+      s.solved = true;
+      showFeedback(qId, 'success-fb', text);
+      document.getElementById('solved-banner-' + qId).classList.add('show');
+      document.getElementById('hint-btn-' + qId).disabled = true;
+      const navItem = document.getElementById('nav-' + qId);
+      navItem.classList.add('solved');
+      document.getElementById('nav-check-' + qId).textContent = '✓';
+      updatePips(qId);
+      updateProgress();
+    } else {
+      const fbType = text.includes('⚠️') ? 'hint-fb' : 'error-fb';
+      showFeedback(qId, fbType, text);
+      checkBtn.disabled = false;
+    }
+  } catch (e) {
+    showFeedback(qId, 'error-fb', 'שגיאה בחיבור. נסה שוב.');
+    checkBtn.disabled = false;
+  }
+}
+
+/* ── CHECK TABLE ONLY ── */
+async function checkTableOnly(qId) {
+  const s = state[qId];
+  if (s.tableSolved) return;
+  const q = questions.find(x => x.id === qId);
+  const checkBtn = document.getElementById('check-btn-' + qId);
+  checkBtn.disabled = true;
+
+  const tableData = q.inputs.map((_, ri) => {
+    const row = {};
+    q.traceHeaders.forEach((h, ci) => {
+      row[h] = document.getElementById(`tc-${qId}-${ri}-${ci}`)?.value.trim() || '';
+    });
+    return row;
+  });
+
+  if (tableData.every(r => Object.values(r).every(v => !v))) {
+    showTraceFeedback(qId, 'table', 'error-fb', '✏️ מלא לפחות חלק מהטבלה לפני הבדיקה!');
+    checkBtn.disabled = false;
+    return;
+  }
+
+  showTraceFeedback(qId, 'table', 'loading-fb', '<div class="spinner"></div> בודק טבלת מעקב...');
+
+  const prompt = `אתה מורה לתכנות C# לתיכון. בדוק את טבלת המעקב של התלמיד בלבד.
+
+קוד C#:
+${q.code}
+
+קלטים: ${q.inputs.join(', ')}
+עמודות: ${q.traceHeaders.join(', ')}
+
+טבלה שמילא התלמיד:
+${tableData.map((r, i) => `שורה ${i+1}: ${JSON.stringify(r)}`).join('\n')}
+
+חשב בעצמך את הערכים הנכונים לכל שורה.
+- אם הטבלה נכונה: ענה "✅ טבלת המעקב נכונה!" ואז שבח קצר
+- אם יש שגיאות: ענה "⚠️ " ואז ציין בדיוק באיזו שורה ועמודה יש שגיאה, ללא תשובות נכונות
+ענה בעברית בלבד, עד 3 שורות.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 800, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await res.json();
+    const text = data.content?.find(b => b.type === 'text')?.text || '';
+
+    if (text.includes('✅')) {
+      s.tableSolved = true;
+      showTraceFeedback(qId, 'table', 'success-fb', text);
+      checkBtn.textContent = '✓ טבלה נכונה';
+      checkBtn.disabled = true;
+      tryMarkTraceSolved(qId);
+    } else {
+      showTraceFeedback(qId, 'table', 'hint-fb', text);
+      checkBtn.disabled = false;
+    }
+  } catch (e) {
+    showTraceFeedback(qId, 'table', 'error-fb', 'שגיאה בחיבור. נסה שוב.');
+    checkBtn.disabled = false;
+  }
+}
+
+/* ── CHECK EXPLANATION ── */
+async function checkExplanation(qId) {
+  const s = state[qId];
+  const q = questions.find(x => x.id === qId);
+  const explanation = document.getElementById('explain-' + qId)?.value.trim() || '';
+  const explainBtn = document.getElementById('explain-btn-' + qId);
+  explainBtn.disabled = true;
+
+  if (!explanation) {
+    showTraceFeedback(qId, 'explain', 'error-fb', '✏️ כתוב הסבר לפני הבדיקה!');
+    explainBtn.disabled = false;
+    return;
+  }
+
+  showTraceFeedback(qId, 'explain', 'loading-fb', '<div class="spinner"></div> בודק הסבר...');
+
+  const prompt = `אתה מורה לתכנות C# לתיכון. בדוק את הסבר התלמיד לקוד הבא.
+
+קוד C#:
+${q.code}
+
+קלטים לדוגמה: ${q.inputs.join(', ')}
+
+הסבר התלמיד: "${explanation}"
+
+הנחיות:
+- אם ההסבר נכון ומלא (מה הלולאה עושה + מה מודפס): ענה "✅ " ואז שבח קצר
+- אם ההסבר חלקי או לא מדויק: ענה "❌ ההסבר לא מדויק. " ואז גלה לתלמיד את הניסוח המלא והנכון (2-3 משפטים ברורים שמסבירים מה הקוד עושה ומה הפלט)
+ענה בעברית בלבד.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 800, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await res.json();
+    const text = data.content?.find(b => b.type === 'text')?.text || '';
+
+    if (text.includes('✅')) {
+      s.explainSolved = true;
+      showTraceFeedback(qId, 'explain', 'success-fb', text);
+      explainBtn.textContent = '✓ הסבר נכון';
+      explainBtn.disabled = true;
+      tryMarkTraceSolved(qId);
+    } else {
+      // Reveal correct explanation
+      showTraceFeedback(qId, 'explain', 'reveal-fb', text);
+      s.explainSolved = true;
+      explainBtn.textContent = '✓ ניסוח נחשף';
+      explainBtn.disabled = true;
+      tryMarkTraceSolved(qId);
+    }
+  } catch (e) {
+    showTraceFeedback(qId, 'explain', 'error-fb', 'שגיאה בחיבור. נסה שוב.');
+    explainBtn.disabled = false;
+  }
+}
+
+function showTraceFeedback(qId, which, type, html) {
+  const id = which === 'table' ? `fb-table-${qId}` : `fb-explain-${qId}`;
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = html;
+  el.className = 'feedback-card show ' + type;
+}
+
+function tryMarkTraceSolved(qId) {
+  const s = state[qId];
+  if (s.tableSolved && s.explainSolved && !s.solved) {
+    s.solved = true;
+    document.getElementById('solved-banner-' + qId)?.classList.add('show');
+    document.getElementById('hint-btn-' + qId).disabled = true;
+    const navItem = document.getElementById('nav-' + qId);
+    navItem?.classList.add('solved');
+    document.getElementById('nav-check-' + qId).textContent = '✓';
+    updatePips(qId);
+    updateProgress();
+  }
+}
+async function getHint(qId) {
+  const s = state[qId];
+  if (s.solved || s.hintsUsed >= 3) return;
+  const q = questions.find(x => x.id === qId);
+  const hintBtn = document.getElementById('hint-btn-' + qId);
+  hintBtn.disabled = true;
+  showFeedback(qId, 'loading-fb', '<div class="spinner"></div> מכין רמז...');
+
+  s.hintsUsed++;
+  updatePips(qId);
+
+  const levels = ['ראשון', 'שני', 'שלישי'];
+
+  let prompt;
+  if (q.type === 'trace') {
+    const traceInstructions = [
+      'תן רמז כללי – הסבר איך לגשת לטבלת מעקב: מה עושים בכל איטרציה, ללא ערכים ספציפיים.',
+      'תן רמז ספציפי – הראה מה קורה באיטרציה הראשונה בלבד (ערכי המשתנים), ועודד לחשב את השאר.',
+      'זהו הרמז האחרון – הראה את 2 השורות הראשונות של הטבלה הנכונה, ובקש להשלים את השאר.'
+    ];
+    prompt = `אתה מורה לתכנות C# לתיכון.
+שאלה מסוג טבלת מעקב.
+קוד: ${q.code}
+קלטים: ${q.inputs.join(', ')}
+זהו הרמז ה${levels[s.hintsUsed - 1]}.
+${traceInstructions[s.hintsUsed - 1]}
+כתוב בעברית, ידידותי, עד 4 שורות.`;
+  } else {
+    const answer = document.getElementById('code-' + qId)?.value.trim() || '';
+    const instructions = [
+      'תן רמז כללי מאוד – כוון לרעיון המרכזי (מונה? צובר? תנאי?) ללא קוד.',
+      'תן רמז ספציפי – הצע מה המשתנים הדרושים ומה מבנה הלולאה, ללא קוד שלם.',
+      'זהו הרמז האחרון – תן מבנה C# חלקי (שלד) אבל השאר את ההשלמה לתלמיד.'
+    ];
+    prompt = `אתה מורה לתכנות C# לתיכון.
+שאלה: ${q.text}
+נושא: ${q.concept}
+ניסיון התלמיד (C#): ${answer || '(ריק)'}
+זהו הרמז ה${levels[s.hintsUsed - 1]}.
+${instructions[s.hintsUsed - 1]}
+כתוב בעברית, ידידותי, עד 4 שורות.`;
+  }
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await res.json();
+    const text = data.content?.find(b => b.type === 'text')?.text || '';
+    showFeedback(qId, 'hint-fb', `💡 רמז ${levels[s.hintsUsed - 1]}:\n${text}`);
+    if (s.hintsUsed < 3) hintBtn.disabled = false;
+    else { hintBtn.textContent = '🔒 אזלו הרמזים'; }
+  } catch (e) {
+    showFeedback(qId, 'error-fb', 'שגיאה בטעינת הרמז. נסה שוב.');
+    s.hintsUsed--;
+    updatePips(qId);
+    hintBtn.disabled = false;
+  }
+}
+
+/* ── INIT ── */
+buildNav();
+buildQuestions();
+
+/* ══════════════════════════════════════════
+   SIMULATION ENGINE
+   ══════════════════════════════════════════ */
+
+const simState = {};  // per-question simulation state
+
+function closeSim(qId) {
+  document.getElementById('sim-panel-' + qId).classList.remove('show');
+  document.getElementById('sim-input-row-' + qId).classList.remove('show');
+}
+
+function addSimLine(qId, type, text) {
+  const body = document.getElementById('sim-body-' + qId);
+  const prefixes = { output: '»', 'input-req': '?', 'input-given': '>', step: '·', error: '!', info: 'ℹ' };
+  const line = document.createElement('div');
+  line.className = 'sim-line ' + type;
+  line.innerHTML = `<span class="prefix">${prefixes[type] || '·'}</span><span class="text">${text}</span>`;
+  body.appendChild(line);
+  body.scrollTop = body.scrollHeight;
+}
+
+function setSimStatus(qId, text, cls) {
+  const el = document.getElementById('sim-status-' + qId);
+  el.textContent = text;
+  el.className = 'sim-status ' + (cls || '');
+}
+
+async function runSimulation(qId) {
+  const code = document.getElementById('code-' + qId).value.trim();
+  if (!code) {
+    document.getElementById('sim-panel-' + qId).classList.add('show');
+    document.getElementById('sim-body-' + qId).innerHTML = '';
+    addSimLine(qId, 'error', 'אין קוד להרצה. כתוב קוד בעורך תחילה.');
+    return;
+  }
+
+  const q = questions.find(x => x.id === qId);
+
+  // Reset sim state
+  simState[qId] = {
+    code, inputQueue: [], waitingForInput: false,
+    resolve: null, conversationHistory: [],
+    inputCount: 0
+  };
+
+  // Show panel
+  const panel = document.getElementById('sim-panel-' + qId);
+  const body  = document.getElementById('sim-body-' + qId);
+  panel.classList.add('show');
+  body.innerHTML = '';
+  document.getElementById('sim-input-row-' + qId).classList.remove('show');
+  setSimStatus(qId, 'מריץ...', 'running');
+  document.getElementById('sim-btn-' + qId).disabled = true;
+
+  addSimLine(qId, 'info', `מתחיל סימולציה – שאלה ${qId}: ${q.title}`);
+  addSimLine(qId, 'step', 'הערה: הסימולציה מריצה את הקוד שלך עם קלטים אמיתיים שאתה מזין');
+
+  const systemPrompt = `אתה מנוע סימולציה של C# לתלמידי תיכון.
+תפקידך: להריץ את קוד C# של התלמיד שלב אחר שלב ולהחזיר JSON בלבד.
+
+השאלה: ${q.text}
+${q.sub.length ? 'חלקים: ' + q.sub.join(' | ') : ''}
+
+כללי הסימולציה:
+1. כאשר הקוד מגיע ל-Console.ReadLine() – בקש קלט מהתלמיד
+2. כאשר הקוד מגיע ל-Console.WriteLine() – הצג את הפלט
+3. עקוב אחרי ערכי המשתנים בכל שלב
+4. בסוף – הצג סיכום של מה שחושב
+
+ענה תמיד ב-JSON בלבד (ללא markdown, ללא backticks):
+{
+  "action": "request_input" | "output" | "step" | "done" | "error",
+  "text": "טקסט להצגה",
+  "variable_state": {"שם_משתנה": ערך, ...},
+  "done": true/false
+}
+
+כאשר action=request_input: בקש את הקלט הבא שהקוד צריך (כולל הקשר – לאיזה איטרציה)
+כאשר action=output: זה פלט של Console.WriteLine
+כאשר action=step: מידע על מה שקורה בקוד (ערכי משתנים וכו')
+כאשר action=done: סיום התוכנית עם סיכום
+כאשר action=error: שגיאה בקוד`;
+
+  // Kick off simulation
+  await simStep(qId, systemPrompt, `הנה קוד C# של התלמיד:\n\`\`\`csharp\n${code}\n\`\`\`\nהתחל להריץ. אם צריך קלט ראשון – בקש אותו.`);
+}
+
+async function simStep(qId, systemPrompt, userMessage) {
+  const ss = simState[qId];
+  if (!ss) return;
+
+  ss.conversationHistory.push({ role: 'user', content: userMessage });
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: ss.conversationHistory
+      })
+    });
+    const data = await res.json();
+    const raw = data.content?.find(b => b.type === 'text')?.text || '{}';
+    ss.conversationHistory.push({ role: 'assistant', content: raw });
+
+    let parsed;
+    try { parsed = JSON.parse(raw.replace(/```json|```/g, '').trim()); }
+    catch { parsed = { action: 'error', text: 'שגיאה בניתוח תגובת הסימולציה.' }; }
+
+    const { action, text, variable_state, done } = parsed;
+
+    if (action === 'output') {
+      addSimLine(qId, 'output', text);
+      if (variable_state && Object.keys(variable_state).length) {
+        const vars = Object.entries(variable_state).map(([k,v]) => `${k}=${v}`).join(', ');
+        addSimLine(qId, 'step', `משתנים: ${vars}`);
+      }
+      if (!done) {
+        await simStep(qId, systemPrompt, 'המשך הרצה.');
+      } else {
+        finishSim(qId);
+      }
+    }
+    else if (action === 'step') {
+      addSimLine(qId, 'step', text);
+      if (variable_state && Object.keys(variable_state).length) {
+        const vars = Object.entries(variable_state).map(([k,v]) => `${k}=${v}`).join(', ');
+        addSimLine(qId, 'step', `משתנים: ${vars}`);
+      }
+      if (!done) {
+        await simStep(qId, systemPrompt, 'המשך.');
+      } else {
+        finishSim(qId);
+      }
+    }
+    else if (action === 'request_input') {
+      ss.inputCount++;
+      addSimLine(qId, 'input-req', `קלט ${ss.inputCount}: ${text}`);
+      setSimStatus(qId, 'ממתין לקלט...', 'running');
+      const inputRow = document.getElementById('sim-input-row-' + qId);
+      const inputField = document.getElementById('sim-input-' + qId);
+      inputRow.classList.add('show');
+      inputField.value = '';
+      inputField.focus();
+      // Save context for when user submits
+      ss.waitingForInput = true;
+      ss.pendingSystem = systemPrompt;
+    }
+    else if (action === 'done') {
+      addSimLine(qId, 'output', text);
+      if (variable_state && Object.keys(variable_state).length) {
+        const vars = Object.entries(variable_state).map(([k,v]) => `${k}=${v}`).join(', ');
+        addSimLine(qId, 'step', `ערכים סופיים: ${vars}`);
+      }
+      finishSim(qId);
+    }
+    else if (action === 'error') {
+      addSimLine(qId, 'error', text);
+      finishSim(qId, true);
+    }
+  } catch (e) {
+    addSimLine(qId, 'error', 'שגיאת תקשורת. נסה שוב.');
+    finishSim(qId, true);
+  }
+}
+
+function finishSim(qId, isError) {
+  document.getElementById('sim-input-row-' + qId).classList.remove('show');
+  document.getElementById('sim-btn-' + qId).disabled = false;
+  if (isError) {
+    setSimStatus(qId, 'נגמר עם שגיאה', '');
+  } else {
+    setSimStatus(qId, '✓ הסימולציה הסתיימה', 'done');
+    addSimLine(qId, 'info', 'הסימולציה הסתיימה. עכשיו תוכל ללחוץ "בדוק פתרון" לבדיקה מלאה.');
+  }
+  if (simState[qId]) simState[qId].waitingForInput = false;
+}
+
+async function submitInput(qId) {
+  const ss = simState[qId];
+  if (!ss || !ss.waitingForInput) return;
+  const val = document.getElementById('sim-input-' + qId).value.trim();
+  if (val === '') return;
+
+  ss.waitingForInput = false;
+  document.getElementById('sim-input-row-' + qId).classList.remove('show');
+  addSimLine(qId, 'input-given', val);
+  setSimStatus(qId, 'מריץ...', 'running');
+
+  await simStep(qId, ss.pendingSystem, `קלט המשתמש: ${val}\nהמשך הרצת הקוד עם ערך זה.`);
+}
+</script>
+</body>
+</html>
